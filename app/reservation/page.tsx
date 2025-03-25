@@ -1,8 +1,8 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import HomeClient from "@/components/HomeClient";
+import ReservationClient from "./ReservationClient";
 
-export default async function Home() {
+export default async function ReservationPage() {
   const cookieStore = cookies();
   const token = cookieStore.get("accessToken");
 
@@ -20,12 +20,13 @@ export default async function Home() {
       },
     });
 
-    if (response.ok) {
-      redirect("/dashboard");
+    if (!response.ok) {
+      redirect("/auth/login");
     }
   } catch (error) {
-    console.error("[Home] 사용자 정보 조회 실패:", error);
+    console.error("[ReservationPage] 사용자 정보 조회 실패:", error);
+    redirect("/auth/login");
   }
 
-  return <HomeClient />;
+  return <ReservationClient />;
 }
