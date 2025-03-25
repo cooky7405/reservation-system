@@ -59,14 +59,12 @@ export async function login(email: string, password: string) {
       throw new Error(response.error);
     }
 
-    if (
-      !response.data ||
-      !response.data.access_token ||
-      !response.data.refresh_token
-    ) {
+    // response.data가 없거나 response 자체가 토큰을 포함하는 경우
+    const tokens = response.data || response;
+    if (!tokens.access_token || !tokens.refresh_token) {
       console.error(
         "[Server Action] 로그인 API 응답 데이터 형식 오류:",
-        response.data
+        tokens
       );
       throw new Error("로그인 응답 데이터가 올바르지 않습니다.");
     }
@@ -74,16 +72,13 @@ export async function login(email: string, password: string) {
     console.log("[Server Action] 로그인 API 응답:", {
       status: response.status,
       data: {
-        access_token: response.data.access_token,
-        refresh_token: response.data.refresh_token,
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token,
       },
     });
 
-    const { access_token: accessToken, refresh_token: refreshToken } =
-      response.data;
-
     // accessToken 저장
-    cookies().set("accessToken", accessToken, {
+    cookies().set("accessToken", tokens.access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
@@ -91,7 +86,7 @@ export async function login(email: string, password: string) {
     });
 
     // refreshToken 저장
-    cookies().set("refreshToken", refreshToken, {
+    cookies().set("refreshToken", tokens.refresh_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
@@ -134,48 +129,54 @@ export async function logout() {
  * POST /auth/refresh
  * @see https://reserve.susanghwan.vip/doc#/auth/refresh
  *
- * @description refreshToken으로 새로운 accessToken을 발급
- * @returns {Promise<string | null>} 새로운 accessToken 또는 실패시 null
+ * @returns {Promise<string | null>} 새로운 access token 또는 null
  *
  * @example
+ * Request:
+ * {
+ *   "refresh_token": "eyJhbG..."
+ * }
+ *
  * Response:
  * {
  *   "access_token": "eyJhbG..."
  * }
  *
  * @log
- * - Request: { headers: { Authorization } }
+ * - Request: { headers: { Authorization: "Bearer ..." } }
  * - Response: { status, data: { access_token } }
- * - Error: { status, data } when token refresh fails
+ * - Error: response.error when refresh fails
  */
-export async function refreshToken() {
-  console.log("[Server Action] 토큰 갱신 시도");
-  const cookieStore = cookies();
-  const refreshToken = cookieStore.get("refreshToken");
-
-  if (!refreshToken) {
-    console.log("[Server Action] refresh 토큰이 없음");
-    return null;
-  }
-
+export async function refreshToken(): Promise<string | null> {
   try {
+    const refreshToken = cookies().get("refreshToken")?.value;
+    if (!refreshToken) {
+      console.error("[Server Action] 리프레시 토큰이 없음");
+      await logout();
+      return null;
+    }
+
     const response = await fetchApi<RefreshResponse>("/auth/refresh", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${refreshToken.value}`,
+        Authorization: `Bearer ${refreshToken}`,
       },
     });
 
     if (response.error) {
-      console.error("[Server Action] 토큰 갱신 실패:", {
-        status: response.status,
-        data: response.data,
-      });
+      console.error("[Server Action] 토큰 갱신 실패:", response.error);
+      await logout();
       return null;
     }
 
-    // 새로운 access token 저장
-    cookieStore.set("accessToken", response.data.access_token, {
+    if (!response.data?.access_token) {
+      console.error("[Server Action] 새로운 액세스 토큰이 없음");
+      await logout();
+      return null;
+    }
+
+    const { access_token } = response.data;
+    cookies().set("accessToken", access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
@@ -183,10 +184,10 @@ export async function refreshToken() {
       maxAge: 60 * 60 * 24 * 7, // 7일
     });
 
-    console.log("[Server Action] 토큰 갱신 성공");
-    return response.data.access_token;
+    return access_token;
   } catch (error) {
-    console.error("[Server Action] 토큰 갱신 실패:", error);
+    console.error("[Server Action] 토큰 갱신 중 에러 발생:", error);
+    await logout();
     return null;
   }
 }
@@ -226,17 +227,19 @@ export async function getUserData() {
       throw new Error(response.error);
     }
 
-    if (!response.data) {
-      console.error("[Server Action] 사용자 정보가 없음");
-      throw new Error("사용자 정보를 찾을 수 없습니다.");
+    // response.data가 없거나 response 자체가 사용자 정보를 포함하는 경우
+    const userData = response.data || response;
+    if (!userData.id || !userData.email || !userData.name) {
+      console.error("[Server Action] 사용자 정보 형식 오류:", userData);
+      throw new Error("사용자 정보가 올바르지 않습니다.");
     }
 
     console.log("[Server Action] 사용자 정보 조회 성공:", {
       status: response.status,
-      data: response.data,
+      data: userData,
     });
 
-    return response.data;
+    return userData;
   } catch (error) {
     console.error("[Server Action] 사용자 정보 조회 실패:", error);
     throw error;

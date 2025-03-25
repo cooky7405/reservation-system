@@ -122,12 +122,15 @@ export async function fetchApi<T = unknown>(
 
   const rawData = await response.json();
 
-  // API 응답 데이터를 공통 형식으로 변환
-  const data: ApiResponse<T> = {
-    status: response.status,
-    data: rawData as T,
-    error: !response.ok ? rawData.message : undefined,
-  };
+  // API 응답 데이터 로깅
+  console.log("[API Response Data]", {
+    endpoint,
+    rawData,
+    isArray: Array.isArray(rawData),
+    type: typeof rawData,
+    hasData: "data" in rawData,
+    hasMessage: "message" in rawData,
+  });
 
   if (!response.ok) {
     console.error("[API Error]", {
@@ -136,10 +139,18 @@ export async function fetchApi<T = unknown>(
       data: rawData,
     });
 
-    if (rawData.code === ErrorCodes.AUTH.TOKEN_EXPIRED) {
+    // 401 에러이고 토큰 만료 메시지인 경우 토큰 갱신 시도
+    if (
+      response.status === 401 &&
+      (rawData.msg?.includes("expired") ||
+        rawData.message?.includes("expired") ||
+        rawData.code === ErrorCodes.AUTH.TOKEN_EXPIRED)
+    ) {
+      console.log("[API] 토큰 만료 감지, 갱신 시도");
       try {
         const newToken = await refreshToken();
         if (newToken) {
+          console.log("[API] 토큰 갱신 성공, 요청 재시도");
           return fetchApi(endpoint, {
             ...options,
             headers: {
@@ -148,12 +159,15 @@ export async function fetchApi<T = unknown>(
             },
           });
         }
-      } catch {
+      } catch (error) {
+        console.error("[API] 토큰 갱신 실패:", error);
         await logout();
       }
     }
-    throw new Error(rawData.message || "API 요청에 실패했습니다.");
+    throw new Error(
+      rawData.message || rawData.msg || "API 요청에 실패했습니다."
+    );
   }
 
-  return data;
+  return rawData as ApiResponse<T>;
 }
