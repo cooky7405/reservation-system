@@ -44,7 +44,7 @@ import {
  * - Response: { status, data: { access_token, refresh_token } }
  */
 export async function login(email: string, password: string) {
-  console.log("[Server Action] 로그인 시도:", { email, password });
+  console.log("[Server Action] 로그인 시도 시작:", { email });
 
   try {
     const response = await fetchApi<LoginResponse>("/auth/login", {
@@ -69,6 +69,7 @@ export async function login(email: string, password: string) {
       throw new Error("로그인 응답 데이터가 올바르지 않습니다.");
     }
 
+    console.log("[Server Action] 토큰 저장 시작");
     // 토큰 저장
     cookies().set("accessToken", tokens.access_token, {
       httpOnly: true,
@@ -84,27 +85,29 @@ export async function login(email: string, password: string) {
       path: "/",
       maxAge: 60 * 60 * 24 * 7, // 7일
     });
+    console.log("[Server Action] 토큰 저장 완료");
 
     // 사용자 정보 가져오기
+    console.log("[Server Action] 사용자 정보 조회 시작");
     const userData = await getUserData();
+    console.log("[Server Action] 사용자 정보:", userData);
     console.log("[Server Action] 사용자 권한:", userData.grade);
 
     // 관리자인 경우 관리자 대시보드로 리다이렉션
     if (userData.grade === "ADMIN") {
-      console.log("[Server Action] 관리자 권한 확인, 관리자 대시보드로 이동");
-      return { success: true, redirect: "/admin/dashboard" };
+      console.log(
+        "[Server Action] 관리자 권한 확인, 관리자 대시보드로 이동 경로 설정 '/admin/dashboard'"
+      );
+      return { success: true, redirectTo: "/admin/dashboard" };
     } else {
       console.log(
-        "[Server Action] 일반 사용자 권한 확인, 일반 대시보드로 이동"
+        "[Server Action] 일반 사용자 권한 확인, 일반 대시보드로 이동 경로 설정 '/dashboard'"
       );
-      return { success: true, redirect: "/dashboard" };
+      return { success: true, redirectTo: "/dashboard" };
     }
   } catch (error) {
-    console.error("Login error:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "로그인에 실패했습니다.",
-    };
+    console.error("[Server Action] 로그인 처리 중 오류 발생:", error);
+    throw error;
   }
 }
 
@@ -241,9 +244,17 @@ export async function getUserData() {
     }
 
     console.log("[Server Action] 사용자 정보 조회 성공:", {
-      status: response.status,
-      data: userData,
+      id: userData.id,
+      email: userData.email,
+      name: userData.name,
+      grade: userData.grade,
     });
+
+    console.log(
+      "[Server Action] 사용자 등급:",
+      userData.grade,
+      userData.grade === "ADMIN" ? "- 관리자 권한 있음" : "- 일반 사용자"
+    );
 
     return userData;
   } catch (error) {
@@ -410,10 +421,18 @@ export async function resendVerificationEmail(email: string) {
 
 export async function checkAdminAccess(): Promise<boolean> {
   try {
+    console.log("[Server Action] 관리자 권한 확인 시작");
     const userData = await getUserData();
-    return userData.grade === "ADMIN";
+
+    const isAdmin = userData.grade === "ADMIN";
+    console.log("[Server Action] 관리자 권한 확인 결과:", {
+      userGrade: userData.grade,
+      isAdmin,
+    });
+
+    return isAdmin;
   } catch (error) {
-    console.error("[Server Action] 관리자 권한 체크 실패:", error);
+    console.error("[Server Action] 관리자 권한 확인 중 오류:", error);
     return false;
   }
 }

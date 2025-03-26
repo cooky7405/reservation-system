@@ -3,6 +3,7 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import Link from "next/link";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -28,29 +29,40 @@ export default function AdminDashboard() {
               사용자 관리
             </h3>
             <p className="text-indigo-700">사용자 목록 조회 및 관리</p>
-            <button className="mt-4 text-indigo-600 hover:text-indigo-800">
+            <Link
+              href="/admin/users"
+              className="mt-4 text-indigo-600 hover:text-indigo-800 inline-block"
+            >
               관리하기 →
-            </button>
+            </Link>
           </div>
 
           {/* 시스템 설정 카드 */}
           <div className="bg-green-50 p-6 rounded-lg">
             <h3 className="text-lg font-semibold text-green-900 mb-2">
-              시스템 설정
+              아이템 관리
             </h3>
-            <p className="text-green-700">시스템 설정 및 구성 관리</p>
-            <button className="mt-4 text-green-600 hover:text-green-800">
-              설정하기 →
-            </button>
+            <p className="text-green-700">
+              아이템 추가, 수정, 삭제 및 상태 관리
+            </p>
+            <Link
+              href="/admin/items"
+              className="mt-4 text-green-600 hover:text-green-800 inline-block"
+            >
+              관리하기 →
+            </Link>
           </div>
 
           {/* 통계 카드 */}
           <div className="bg-purple-50 p-6 rounded-lg">
             <h3 className="text-lg font-semibold text-purple-900 mb-2">통계</h3>
             <p className="text-purple-700">사용 통계 및 분석</p>
-            <button className="mt-4 text-purple-600 hover:text-purple-800">
+            <Link
+              href="/admin/analytics"
+              className="mt-4 text-purple-600 hover:text-purple-800 inline-block"
+            >
               보기 →
-            </button>
+            </Link>
           </div>
         </div>
       </div>

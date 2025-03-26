@@ -18,9 +18,21 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
-      await login(email, password);
-      router.push("/dashboard");
-    } catch {
+      console.log("[LoginForm] 로그인 시도");
+      const result = await login(email, password);
+      console.log("[LoginForm] 로그인 결과:", result);
+
+      if (result.success) {
+        console.log("[LoginForm] 리다이렉션 경로:", result.redirectTo);
+        console.log("[LoginForm] 리다이렉션 시작");
+        window.location.href = result.redirectTo;
+        console.log("[LoginForm] 리다이렉션 완료");
+      } else {
+        console.error("[LoginForm] 로그인 실패:", result.error);
+        setError(result.error || "로그인에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("[LoginForm] 로그인 처리 중 오류:", error);
       setError("로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.");
     } finally {
       setIsLoading(false);

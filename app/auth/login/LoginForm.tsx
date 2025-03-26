@@ -15,8 +15,20 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
-      await login(email, password);
+      const result = await login(email, password);
+      console.log("[LoginForm] 로그인 결과:", result);
+
+      if (result.success) {
+        console.log(
+          "[LoginForm] 로그인 성공, 리다이렉션 경로:",
+          result.redirectTo
+        );
+        window.location.href = result.redirectTo || "/dashboard";
+      } else {
+        setError("로그인에 실패했습니다.");
+      }
     } catch (error) {
+      console.error("[LoginForm] 로그인 오류:", error);
       setError(
         error instanceof Error ? error.message : "로그인에 실패했습니다."
       );
@@ -26,7 +38,7 @@ export default function LoginForm() {
   };
 
   return (
-    <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+    <form className="mt-8 space-y-6" onSubmit={handleSubmit} autoComplete="off">
       <div className="rounded-md shadow-sm -space-y-px">
         <div>
           <label htmlFor="email" className="sr-only">
@@ -37,6 +49,7 @@ export default function LoginForm() {
             name="email"
             type="email"
             required
+            autoComplete="username"
             className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
             placeholder="이메일"
             value={email}
@@ -52,6 +65,7 @@ export default function LoginForm() {
             name="password"
             type="password"
             required
+            autoComplete="current-password"
             className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
             placeholder="비밀번호"
             value={password}

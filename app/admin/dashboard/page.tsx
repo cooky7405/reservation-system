@@ -1,14 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { checkAdminAccess } from "@/app/actions/auth";
 import { getUserReservations } from "@/app/actions/reservation";
 import { Reservation } from "@/app/actions/reservation";
 
 export default function AdminDashboard() {
-  const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [recentReservations, setRecentReservations] = useState<Reservation[]>(
@@ -17,15 +15,28 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     const checkAccess = async () => {
-      const isAdmin = await checkAdminAccess();
-      if (!isAdmin) {
-        router.push("/");
-        return;
+      try {
+        console.log("[AdminDashboard] 관리자 권한 확인 시작");
+        const isAdmin = await checkAdminAccess();
+        console.log("[AdminDashboard] 관리자 권한 확인 결과:", isAdmin);
+
+        if (!isAdmin) {
+          console.log(
+            "[AdminDashboard] 관리자 권한 없음, 일반 대시보드로 리다이렉션"
+          );
+          window.location.href = "/dashboard";
+          return;
+        }
+
+        console.log("[AdminDashboard] 관리자 권한 확인 완료, 데이터 로드 시작");
+        loadData();
+      } catch (error) {
+        console.error("[AdminDashboard] 권한 확인 중 오류:", error);
+        window.location.href = "/dashboard";
       }
-      loadData();
     };
     checkAccess();
-  }, [router]);
+  }, []);
 
   const loadData = async () => {
     try {

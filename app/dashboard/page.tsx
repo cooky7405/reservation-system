@@ -8,6 +8,13 @@ import DashboardLayout from "@/app/components/layouts/DashboardLayout";
 import DashboardMenu from "@/app/components/dashboard/DashboardMenu";
 import ReservationTable from "@/app/components/dashboard/ReservationTable";
 
+interface UserData {
+  id: number;
+  email: string;
+  name: string;
+  grade: string;
+}
+
 const userMenuItems = [
   {
     href: "/reservation",
@@ -29,7 +36,7 @@ const userMenuItems = [
 export default function UserDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [userData, setUserData] = useState<any>(null);
+  const [userData, setUserData] = useState<UserData | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [recentReservations, setRecentReservations] = useState<Reservation[]>(
     []
