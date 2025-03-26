@@ -13,9 +13,9 @@ export interface Category {
 
 export interface Item {
   id: number;
+  item_id: number;
   name: string;
   description: string;
-  price: number;
   category_id: number;
   is_active: boolean;
   created_at: string;
@@ -41,7 +41,6 @@ export interface Reservation {
 interface CreateItemRequest {
   name: string;
   description: string;
-  price: number;
   category_id: number;
   is_active: boolean;
 }
@@ -97,35 +96,42 @@ export async function getItems(): Promise<Item[]> {
   const response = await fetchApi<any>("/manage/items");
   console.log("[getItems] API 응답:", response);
 
+  let items: Item[] = [];
+
   // 응답이 직접 배열인 경우
   if (Array.isArray(response)) {
     console.log("[getItems] 아이템 목록 (배열):", response);
-    return response;
+    items = response;
   }
-
   // 응답에 items 필드가 있는 경우
-  if (response && response.items && Array.isArray(response.items)) {
+  else if (response && response.items && Array.isArray(response.items)) {
     console.log("[getItems] 아이템 목록 (items):", response.items);
-    return response.items;
+    items = response.items;
   }
-
   // 응답에 data 필드가 있는 경우
-  if (response && response.data) {
+  else if (response && response.data) {
     // data가 배열인 경우
     if (Array.isArray(response.data)) {
       console.log("[getItems] 아이템 목록 (data 배열):", response.data);
-      return response.data;
+      items = response.data;
     }
-
     // data.items가 있는 경우
-    if (response.data.items && Array.isArray(response.data.items)) {
+    else if (response.data.items && Array.isArray(response.data.items)) {
       console.log("[getItems] 아이템 목록 (data.items):", response.data.items);
-      return response.data.items;
+      items = response.data.items;
     }
   }
 
-  console.log("[getItems] 유효한 아이템 데이터 없음");
-  return [];
+  // item_id 필드가 없는 항목에 대해 id 값을 복사
+  const processedItems = items.map((item) => {
+    if (item.item_id === undefined) {
+      return { ...item, item_id: item.id };
+    }
+    return item;
+  });
+
+  console.log("[getItems] 처리된 아이템 목록:", processedItems);
+  return processedItems;
 }
 
 export async function getTimeSlots(): Promise<TimeSlot[]> {
@@ -197,7 +203,7 @@ export async function updateItem(data: UpdateItemRequest): Promise<Item> {
 
 export async function deleteItem(id: number): Promise<void> {
   try {
-    console.log("[Server Action] 아이템 삭제 시도:", { id });
+    console.log("[Server Action] 아이템 삭제 시도:", { id, item_id: id });
 
     const response = await fetchApi<void>(`/manage/items/${id}`, {
       method: "DELETE",
@@ -222,7 +228,11 @@ export async function toggleItemStatus(
   isActive: boolean
 ): Promise<Item> {
   try {
-    console.log("[Server Action] 아이템 상태 변경 시도:", { id, isActive });
+    console.log("[Server Action] 아이템 상태 변경 시도:", {
+      id,
+      item_id: id,
+      isActive,
+    });
 
     const response = await fetchApi<Item>(`/manage/items/${id}/toggle-status`, {
       method: "PATCH",

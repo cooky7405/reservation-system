@@ -20,10 +20,10 @@ export default function ItemsManagementPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [newItem, setNewItem] = useState({
     name: "",
     description: "",
-    price: 0,
     category_id: 0,
     is_active: true,
   });
@@ -63,7 +63,6 @@ export default function ItemsManagementPage() {
       setNewItem({
         name: "",
         description: "",
-        price: 0,
         category_id: 0,
         is_active: true,
       });
@@ -83,7 +82,6 @@ export default function ItemsManagementPage() {
         ...editingItem,
         name: editingItem.name,
         description: editingItem.description,
-        price: editingItem.price,
         category_id: editingItem.category_id,
         is_active: editingItem.is_active,
       });
@@ -116,6 +114,11 @@ export default function ItemsManagementPage() {
       console.error(error);
     }
   };
+
+  // 필터링된 아이템 리스트 계산
+  const filteredItems = selectedCategory
+    ? items.filter((item) => item.category_id === selectedCategory)
+    : items;
 
   if (isLoading) {
     return <div className="p-4">로딩 중...</div>;
@@ -164,18 +167,6 @@ export default function ItemsManagementPage() {
             />
           </div>
           <div>
-            <label className="block mb-1">가격</label>
-            <input
-              type="number"
-              value={newItem.price}
-              onChange={(e) =>
-                setNewItem({ ...newItem, price: Number(e.target.value) })
-              }
-              className="w-full p-2 border rounded"
-              required
-            />
-          </div>
-          <div>
             <label className="block mb-1">카테고리</label>
             <select
               value={newItem.category_id}
@@ -202,54 +193,100 @@ export default function ItemsManagementPage() {
         </button>
       </form>
 
+      {/* 카테고리 필터 */}
+      <div className="mb-6">
+        <label className="block mb-2 font-medium">카테고리별 필터링</label>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setSelectedCategory(null)}
+            className={`px-3 py-1 rounded-full ${
+              selectedCategory === null
+                ? "bg-blue-500 text-white"
+                : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+            }`}
+          >
+            전체 보기
+          </button>
+          {categories.map((category) => (
+            <button
+              key={category.id}
+              onClick={() => setSelectedCategory(category.id)}
+              className={`px-3 py-1 rounded-full ${
+                selectedCategory === category.id
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+              }`}
+            >
+              {category.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* 아이템 목록 */}
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold mb-4">아이템 목록</h2>
-        {items.map((item) => (
-          <div
-            key={item.id}
-            className="bg-white p-4 border rounded shadow-sm hover:shadow-md transition-shadow"
-          >
-            <div className="flex justify-between items-start">
-              <div>
-                <h3 className="text-lg font-semibold">{item.name}</h3>
-                <p className="text-gray-600">{item.description}</p>
-                <p className="text-gray-500">가격: {item.price}원</p>
-                <p className="text-gray-500">
-                  카테고리:{" "}
-                  {categories.find((c) => c.id === item.category_id)?.name}
-                </p>
-                <p className="text-gray-500">
-                  상태: {item.is_active ? "활성" : "비활성"}
-                </p>
-              </div>
-              <div className="space-x-2">
-                <button
-                  onClick={() => setEditingItem(item)}
-                  className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600"
-                >
-                  수정
-                </button>
-                <button
-                  onClick={() => handleToggleStatus(item.id, item.is_active)}
-                  className={`px-4 py-2 rounded ${
-                    item.is_active
-                      ? "bg-red-500 hover:bg-red-600"
-                      : "bg-green-500 hover:bg-green-600"
-                  } text-white`}
-                >
-                  {item.is_active ? "비활성화" : "활성화"}
-                </button>
-                <button
-                  onClick={() => handleDeleteItem(item.id)}
-                  className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-                >
-                  삭제
-                </button>
+        <h2 className="text-xl font-semibold mb-4">
+          아이템 목록
+          {selectedCategory && (
+            <span className="text-gray-500 text-base ml-2">
+              ({categories.find((c) => c.id === selectedCategory)?.name}{" "}
+              카테고리)
+            </span>
+          )}
+        </h2>
+        {filteredItems.length === 0 ? (
+          <div className="p-4 bg-gray-50 text-gray-500 text-center rounded">
+            {selectedCategory
+              ? "이 카테고리에 해당하는 아이템이 없습니다."
+              : "등록된 아이템이 없습니다."}
+          </div>
+        ) : (
+          filteredItems.map((item) => (
+            <div
+              key={item.id}
+              className="bg-white p-4 border rounded shadow-sm hover:shadow-md transition-shadow"
+            >
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="text-lg font-semibold">{item.name}</h3>
+                  <p className="text-gray-600">{item.description}</p>
+                  <p className="text-gray-500">아이템 ID: {item.item_id}</p>
+                  <p className="text-gray-500">
+                    카테고리:{" "}
+                    {categories.find((c) => c.id === item.category_id)?.name}
+                  </p>
+                  <p className="text-gray-500">
+                    상태: {item.is_active ? "활성" : "비활성"}
+                  </p>
+                </div>
+                <div className="space-x-2">
+                  <button
+                    onClick={() => setEditingItem(item)}
+                    className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600"
+                  >
+                    수정
+                  </button>
+                  <button
+                    onClick={() => handleToggleStatus(item.id, item.is_active)}
+                    className={`px-4 py-2 rounded ${
+                      item.is_active
+                        ? "bg-red-500 hover:bg-red-600"
+                        : "bg-green-500 hover:bg-green-600"
+                    } text-white`}
+                  >
+                    {item.is_active ? "비활성화" : "활성화"}
+                  </button>
+                  <button
+                    onClick={() => handleDeleteItem(item.id)}
+                    className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                  >
+                    삭제
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
       {/* 수정 모달 */}
@@ -280,21 +317,6 @@ export default function ItemsManagementPage() {
                       setEditingItem({
                         ...editingItem,
                         description: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border rounded"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block mb-1">가격</label>
-                  <input
-                    type="number"
-                    value={editingItem.price}
-                    onChange={(e) =>
-                      setEditingItem({
-                        ...editingItem,
-                        price: Number(e.target.value),
                       })
                     }
                     className="w-full p-2 border rounded"
