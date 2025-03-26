@@ -1,0 +1,178 @@
+# 페이지 구조 설계
+
+## 1. 메인 페이지 (pages/index.tsx)
+```typescript
+const Home = () => {
+  const { isAuthenticated, user } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push('/auth/login');
+    } else {
+      router.push('/dashboard');
+    }
+  }, [isAuthenticated]);
+
+  return <LoadingSpinner />;
+};
+```
+
+## 2. 로그인 페이지 (pages/auth/login.tsx)
+```typescript
+const LoginPage = () => {
+  return (
+    <AuthLayout>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="max-w-md w-full space-y-8">
+          <div>
+            <h2 className="text-center text-3xl font-extrabold text-gray-900">
+              로그인
+            </h2>
+          </div>
+          <LoginForm />
+          <div className="text-center">
+            <Link href="/auth/signup">
+              계정이 없으신가요? 회원가입
+            </Link>
+          </div>
+        </div>
+      </div>
+    </AuthLayout>
+  );
+};
+```
+
+## 3. 대시보드 페이지 (pages/dashboard/index.tsx)
+```typescript
+const Dashboard = () => {
+  const { user } = useAuth();
+  const config = dashboardConfigs[user?.role || 'USER'];
+
+  return (
+    <DashboardLayout>
+      <div className="flex flex-col space-y-6">
+        {user?.role === 'ADMIN' ? (
+          <AdminDashboard config={config} />
+        ) : (
+          <UserDashboard config={config} />
+        )}
+      </div>
+    </DashboardLayout>
+  );
+};
+```
+
+## 4. 로그인 폼 컴포넌트 (components/auth/LoginForm.tsx)
+```typescript
+const LoginForm = () => {
+  const [formData, setFormData] = useState({
+    username: '',
+    password: '',
+  });
+  const [error, setError] = useState('');
+  const { login } = useAuth();
+  const router = useRouter();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await login(formData);
+      router.push('/dashboard');
+    } catch (err) {
+      setError('로그인에 실패했습니다.');
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+      <div className="rounded-md shadow-sm -space-y-px">
+        <input
+          type="text"
+          name="username"
+          placeholder="사용자명"
+          value={formData.username}
+          onChange={(e) => setFormData({...formData, username: e.target.value})}
+          required
+        />
+        <input
+          type="password"
+          name="password"
+          placeholder="비밀번호"
+          value={formData.password}
+          onChange={(e) => setFormData({...formData, password: e.target.value})}
+          required
+        />
+      </div>
+      {error && (
+        <div className="text-red-500 text-sm text-center">
+          {error}
+        </div>
+      )}
+      <button
+        type="submit"
+        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+      >
+        로그인
+      </button>
+    </form>
+  );
+};
+```
+
+## 5. 대시보드 레이아웃 (components/layout/DashboardLayout.tsx)
+```typescript
+const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
+  const { user, logout } = useAuth();
+  
+  return (
+    <div className="min-h-screen bg-gray-100">
+      <nav className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex">
+              <div className="flex-shrink-0 flex items-center">
+                로고
+              </div>
+            </div>
+            <div className="flex items-center">
+              <span className="mr-4">{user?.username}</span>
+              <button
+                onClick={logout}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                로그아웃
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+      
+      <div className="py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+};
+```
+
+## 주요 기능
+
+### 1. 인증 상태에 따른 리다이렉션
+- 비로그인 상태로 보호된 페이지 접근 시 로그인 페이지로 리다이렉션
+- 로그인 상태로 로그인/회원가입 페이지 접근 시 대시보드로 리다이렉션
+
+### 2. 권한 기반 대시보드 렌더링
+- 사용자 권한에 따라 다른 대시보드 컴포넌트 렌더링
+- 권한별 메뉴 및 기능 구성
+
+### 3. 반응형 디자인
+- 모바일, 태블릿, 데스크톱 지원
+- Tailwind CSS를 활용한 스타일링
+
+### 4. 사용자 경험
+- 로딩 상태 표시
+- 에러 메시지 표시
+- 부드러운 페이지 전환 

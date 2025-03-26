@@ -1,0 +1,82 @@
+# 데이터베이스 구조 설계
+
+## Company (회사)
+- ID: uint
+- Name: string
+- Address: string
+- Description: string
+- CreatedAt: time.Time
+- UpdatedAt: time.Time
+
+## User (회원)
+- ID: uint
+- Username: string
+- Password: string
+- PhoneNumber: string
+- CompanyID: uint
+- Role: string (admin, user 등)
+- CreatedAt: time.Time
+- UpdatedAt: time.Time
+
+## Category (예약 카테고리)
+- ID: uint
+- Name: string (회의실, 주차장)
+- Description: string
+- CreatedAt: time.Time
+- UpdatedAt: time.Time
+
+## Item (예약 아이템)
+- ID: uint
+- CategoryID: uint
+- Name: string (회의실1, 회의실2, 주차공간1 등)
+- Description: string
+- Status: string
+- CreatedAt: time.Time
+- UpdatedAt: time.Time
+
+## TimeSlot (예약 가능 시간대)
+- ID: uint
+- ItemID: uint
+- StartTime: time.Time
+- EndTime: time.Time
+- IsAvailable: boolean
+- CreatedAt: time.Time
+- UpdatedAt: time.Time
+
+## Reservation (예약)
+- ID: uint
+- UserID: uint
+- ItemID: uint
+- SlotID: uint
+- Status: string (pending, confirmed, cancelled 등)
+- StartTime: time.Time
+- EndTime: time.Time
+- CreatedAt: time.Time
+- UpdatedAt: time.Time
+
+## Store (매장)
+- ID: uint
+- Name: string
+- Address: string
+- Description: string
+- OpenTime: string
+- CloseTime: string
+- CreatedAt: time.Time
+- UpdatedAt: time.Time
+
+## Review (리뷰)
+- ID: uint
+- UserID: uint
+- StoreID: uint
+- Rating: float32
+- Content: string
+- CreatedAt: time.Time
+- UpdatedAt: time.Time
+
+## Menu (메뉴)
+- ID: uint
+- StoreID: uint
+- Name: string
+- Price: float64
+- Description: string
+- Category: string

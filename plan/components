@@ -1,0 +1,69 @@
+# 컴포넌트 구조 설계
+
+## 페이지 구조
+```
+pages/
+├── auth/
+│   ├── login.tsx        # 로그인 페이지
+│   └── signup.tsx       # 회원가입 페이지
+├── dashboard/
+│   ├── index.tsx        # 대시보드 메인 페이지
+│   ├── admin/           # 관리자용 대시보드
+│   └── user/            # 일반 사용자용 대시보드
+└── index.tsx            # 메인 페이지 (로그인 상태에 따라 리다이렉션)
+
+```
+
+## 컴포넌트 구조
+```
+components/
+├── auth/
+│   ├── LoginForm.tsx    # 로그인 폼
+│   └── SignupForm.tsx   # 회원가입 폼
+├── layout/
+│   ├── AuthLayout.tsx   # 인증 페이지 레이아웃
+│   └── DashboardLayout.tsx  # 대시보드 레이아웃
+├── dashboard/
+│   ├── AdminDashboard.tsx   # 관리자 대시보드 컴포넌트
+│   └── UserDashboard.tsx    # 일반 사용자 대시보드 컴포넌트
+└── common/
+    ├── Header.tsx       # 공통 헤더
+    └── Sidebar.tsx      # 공통 사이드바
+```
+
+## 주요 컴포넌트 기능
+
+### AuthLayout
+- 로그인/회원가입 페이지의 기본 레이아웃
+- 중앙 정렬된 카드 형태의 디자인
+- 로고 및 브랜딩 요소 포함
+
+### DashboardLayout
+- 대시보드의 기본 레이아웃
+- 상단 헤더 (사용자 정보, 로그아웃)
+- 좌측 사이드바 (네비게이션 메뉴)
+- 반응형 디자인
+
+### LoginForm
+- 사용자명/비밀번호 입력 폼
+- 로그인 상태 관리
+- 에러 메시지 표시
+- 회원가입 페이지 링크
+
+### SignupForm
+- 회원가입 정보 입력 폼
+- 유효성 검사
+- 이메일 인증 프로세스
+- 로그인 페이지 링크
+
+### AdminDashboard
+- 관리자 전용 기능
+- 사용자 관리
+- 시스템 설정
+- 통계 및 분석
+
+### UserDashboard
+- 일반 사용자 기능
+- 예약 현황
+- 개인 설정
+- 알림 
