@@ -69,15 +69,7 @@ export async function login(email: string, password: string) {
       throw new Error("로그인 응답 데이터가 올바르지 않습니다.");
     }
 
-    console.log("[Server Action] 로그인 API 응답:", {
-      status: response.status,
-      data: {
-        access_token: tokens.access_token,
-        refresh_token: tokens.refresh_token,
-      },
-    });
-
-    // accessToken 저장
+    // 토큰 저장
     cookies().set("accessToken", tokens.access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -85,7 +77,6 @@ export async function login(email: string, password: string) {
       path: "/",
     });
 
-    // refreshToken 저장
     cookies().set("refreshToken", tokens.refresh_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -94,11 +85,28 @@ export async function login(email: string, password: string) {
       maxAge: 60 * 60 * 24 * 7, // 7일
     });
 
-    console.log("[Server Action] 로그인 성공");
+    // 사용자 정보 가져오기
+    const userData = await getUserData();
+    console.log("[Server Action] 사용자 권한:", userData.grade);
+
+    // 사용자 권한에 따라 리다이렉션
+    if (userData.grade === "ADMIN") {
+      console.log("[Server Action] 관리자 권한 확인, 관리자 대시보드로 이동");
+      redirect("/admin/dashboard");
+    } else {
+      console.log(
+        "[Server Action] 일반 사용자 권한 확인, 일반 대시보드로 이동"
+      );
+      redirect("/dashboard");
+    }
+
     return { success: true };
   } catch (error) {
-    console.error("[Server Action] 로그인 실패:", error);
-    throw error;
+    console.error("Login error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "로그인에 실패했습니다.",
+    };
   }
 }
 
@@ -399,5 +407,15 @@ export async function resendVerificationEmail(email: string) {
   } catch (error) {
     console.error("[Server Action] 인증 이메일 재발송 실패:", error);
     return { success: false, message: "인증 이메일 재발송에 실패했습니다." };
+  }
+}
+
+export async function checkAdminAccess(): Promise<boolean> {
+  try {
+    const userData = await getUserData();
+    return userData.grade === "ADMIN";
+  } catch (error) {
+    console.error("[Server Action] 관리자 권한 체크 실패:", error);
+    return false;
   }
 }

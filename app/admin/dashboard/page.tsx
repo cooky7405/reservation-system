@@ -3,43 +3,35 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getUserData, checkAdminAccess } from "@/app/actions/auth";
+import { checkAdminAccess } from "@/app/actions/auth";
 import { getUserReservations } from "@/app/actions/reservation";
 import { Reservation } from "@/app/actions/reservation";
 
-export default function UserDashboard() {
+export default function AdminDashboard() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [userData, setUserData] = useState<any>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [recentReservations, setRecentReservations] = useState<Reservation[]>(
     []
   );
 
   useEffect(() => {
-    loadData();
-  }, []);
+    const checkAccess = async () => {
+      const isAdmin = await checkAdminAccess();
+      if (!isAdmin) {
+        router.push("/");
+        return;
+      }
+      loadData();
+    };
+    checkAccess();
+  }, [router]);
 
   const loadData = async () => {
     try {
-      const [user, reservations, adminCheck] = await Promise.all([
-        getUserData(),
-        getUserReservations(),
-        checkAdminAccess(),
-      ]);
-
-      // 로그인 후 첫 접근 시에만 리다이렉션
-      const isFirstAccess = !sessionStorage.getItem("dashboardAccessed");
-      if (adminCheck && isFirstAccess) {
-        sessionStorage.setItem("dashboardAccessed", "true");
-        router.push("/admin/dashboard");
-        return;
-      }
-
-      setUserData(user);
+      const reservations = await getUserReservations();
+      // 최근 예약 5개만 표시
       setRecentReservations(reservations.slice(0, 5));
-      setIsAdmin(adminCheck);
     } catch (error) {
       setError("데이터 로딩 중 오류가 발생했습니다.");
       console.error(error);
@@ -58,47 +50,61 @@ export default function UserDashboard() {
 
   return (
     <div className="p-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">내 대시보드</h1>
-        <div className="flex items-center gap-4">
-          {isAdmin && (
-            <Link
-              href="/admin/dashboard"
-              className="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors"
-            >
-              관리자 대시보드로 이동 →
-            </Link>
-          )}
-          <div className="text-sm text-gray-600">
-            {userData?.name}님 환영합니다
-          </div>
-        </div>
+      <h1 className="text-2xl font-bold mb-6">관리자 대시보드</h1>
+
+      {/* 대시보드 전환 */}
+      <div className="mb-6">
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+        >
+          <span className="mr-2">←</span>
+          일반 사용자 대시보드로 이동
+        </Link>
       </div>
 
-      {/* 사용자 메뉴 */}
+      {/* 관리 메뉴 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         <Link
-          href="/reservation"
+          href="/admin/items"
           className="p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow"
         >
-          <h2 className="text-xl font-semibold mb-2">예약하기</h2>
-          <p className="text-gray-600">새로운 예약을 생성합니다</p>
+          <h2 className="text-xl font-semibold mb-2">아이템 관리</h2>
+          <p className="text-gray-600">아이템 추가, 수정, 삭제 및 상태 관리</p>
         </Link>
 
         <Link
-          href="/my-reservations"
+          href="/admin/categories"
           className="p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow"
         >
-          <h2 className="text-xl font-semibold mb-2">내 예약</h2>
-          <p className="text-gray-600">예약 내역을 확인합니다</p>
+          <h2 className="text-xl font-semibold mb-2">카테고리 관리</h2>
+          <p className="text-gray-600">
+            카테고리 추가, 수정, 삭제 및 상태 관리
+          </p>
         </Link>
 
         <Link
-          href="/profile"
+          href="/admin/time-slots"
           className="p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow"
         >
-          <h2 className="text-xl font-semibold mb-2">프로필</h2>
-          <p className="text-gray-600">내 정보를 관리합니다</p>
+          <h2 className="text-xl font-semibold mb-2">시간대 관리</h2>
+          <p className="text-gray-600">예약 가능 시간대 설정 및 관리</p>
+        </Link>
+
+        <Link
+          href="/admin/reservations"
+          className="p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow"
+        >
+          <h2 className="text-xl font-semibold mb-2">예약 관리</h2>
+          <p className="text-gray-600">예약 현황 확인 및 상태 관리</p>
+        </Link>
+
+        <Link
+          href="/admin/users"
+          className="p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow"
+        >
+          <h2 className="text-xl font-semibold mb-2">사용자 관리</h2>
+          <p className="text-gray-600">사용자 목록 조회 및 권한 관리</p>
         </Link>
       </div>
 
