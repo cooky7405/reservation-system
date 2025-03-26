@@ -89,18 +89,16 @@ export async function login(email: string, password: string) {
     const userData = await getUserData();
     console.log("[Server Action] 사용자 권한:", userData.grade);
 
-    // 사용자 권한에 따라 리다이렉션
+    // 관리자인 경우 관리자 대시보드로 리다이렉션
     if (userData.grade === "ADMIN") {
       console.log("[Server Action] 관리자 권한 확인, 관리자 대시보드로 이동");
-      redirect("/admin/dashboard");
+      return { success: true, redirect: "/admin/dashboard" };
     } else {
       console.log(
         "[Server Action] 일반 사용자 권한 확인, 일반 대시보드로 이동"
       );
-      redirect("/dashboard");
+      return { success: true, redirect: "/dashboard" };
     }
-
-    return { success: true };
   } catch (error) {
     console.error("Login error:", error);
     return {
