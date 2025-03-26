@@ -51,33 +51,81 @@ interface UpdateItemRequest extends CreateItemRequest {
 }
 
 export async function getCategories(): Promise<Category[]> {
-  const response = await fetchApi<Category[]>("/manage/categories");
+  console.log("[getCategories] 카테고리 조회 시작");
+  const response = await fetchApi<any>("/manage/categories");
+  console.log("[getCategories] API 응답:", response);
 
-  if (!response.data) {
-    return [];
+  // 응답이 직접 배열인 경우
+  if (Array.isArray(response)) {
+    console.log("[getCategories] 카테고리 목록 (배열):", response);
+    return response;
   }
 
-  if (!Array.isArray(response.data)) {
-    console.error("[getCategories] 응답 데이터가 배열이 아님:", response.data);
-    return [];
+  // 응답에 categories 필드가 있는 경우
+  if (response && response.categories && Array.isArray(response.categories)) {
+    console.log(
+      "[getCategories] 카테고리 목록 (categories):",
+      response.categories
+    );
+    return response.categories;
   }
 
-  return response.data;
+  // 응답에 data 필드가 있는 경우
+  if (response && response.data) {
+    // data가 배열인 경우
+    if (Array.isArray(response.data)) {
+      console.log("[getCategories] 카테고리 목록 (data 배열):", response.data);
+      return response.data;
+    }
+
+    // data.categories가 있는 경우
+    if (response.data.categories && Array.isArray(response.data.categories)) {
+      console.log(
+        "[getCategories] 카테고리 목록 (data.categories):",
+        response.data.categories
+      );
+      return response.data.categories;
+    }
+  }
+
+  console.log("[getCategories] 유효한 카테고리 데이터 없음");
+  return [];
 }
 
 export async function getItems(): Promise<Item[]> {
-  const response = await fetchApi<Item[]>("/manage/items");
+  console.log("[getItems] 아이템 조회 시작");
+  const response = await fetchApi<any>("/manage/items");
+  console.log("[getItems] API 응답:", response);
 
-  if (!response.data) {
-    return [];
+  // 응답이 직접 배열인 경우
+  if (Array.isArray(response)) {
+    console.log("[getItems] 아이템 목록 (배열):", response);
+    return response;
   }
 
-  if (!Array.isArray(response.data)) {
-    console.error("[getItems] 응답 데이터가 배열이 아님:", response.data);
-    return [];
+  // 응답에 items 필드가 있는 경우
+  if (response && response.items && Array.isArray(response.items)) {
+    console.log("[getItems] 아이템 목록 (items):", response.items);
+    return response.items;
   }
 
-  return response.data;
+  // 응답에 data 필드가 있는 경우
+  if (response && response.data) {
+    // data가 배열인 경우
+    if (Array.isArray(response.data)) {
+      console.log("[getItems] 아이템 목록 (data 배열):", response.data);
+      return response.data;
+    }
+
+    // data.items가 있는 경우
+    if (response.data.items && Array.isArray(response.data.items)) {
+      console.log("[getItems] 아이템 목록 (data.items):", response.data.items);
+      return response.data.items;
+    }
+  }
+
+  console.log("[getItems] 유효한 아이템 데이터 없음");
+  return [];
 }
 
 export async function getTimeSlots(): Promise<TimeSlot[]> {
