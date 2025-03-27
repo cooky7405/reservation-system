@@ -8,6 +8,7 @@ export default async function LoginPage() {
 
   if (token) {
     redirect("/dashboard");
+    return null;
   }
 
   return (
