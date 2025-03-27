@@ -44,7 +44,7 @@ import {
  * - Response: { status, data: { access_token, refresh_token } }
  */
 export async function login(email: string, password: string) {
-  console.log("[Server Action] 로그인 시도 시작:", { email });
+  console.log("[Server Action] 로그인 시도:", { email, password });
 
   try {
     const response = await fetchApi<LoginResponse>("/auth/login", {
@@ -52,62 +52,46 @@ export async function login(email: string, password: string) {
       body: JSON.stringify({ email, password }),
     });
 
-    console.log("[Server Action] 로그인 API 응답 전체:", response);
-
     if (response.error) {
-      console.error("[Server Action] 로그인 API 에러:", response.error);
       throw new Error(response.error);
     }
 
-    // response.data가 없거나 response 자체가 토큰을 포함하는 경우
     const tokens = response.data || response;
     if (!tokens.access_token || !tokens.refresh_token) {
-      console.error(
-        "[Server Action] 로그인 API 응답 데이터 형식 오류:",
-        tokens
-      );
       throw new Error("로그인 응답 데이터가 올바르지 않습니다.");
     }
 
-    console.log("[Server Action] 토큰 저장 시작");
     // 토큰 저장
-    cookies().set("accessToken", tokens.access_token, {
+    const cookieOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-    });
-
-    cookies().set("refreshToken", tokens.refresh_token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      sameSite: "lax" as const,
       path: "/",
       maxAge: 60 * 60 * 24 * 7, // 7일
-    });
-    console.log("[Server Action] 토큰 저장 완료");
+    };
+
+    cookies().set("accessToken", tokens.access_token, cookieOptions);
+    cookies().set("refreshToken", tokens.refresh_token, cookieOptions);
 
     // 사용자 정보 가져오기
-    console.log("[Server Action] 사용자 정보 조회 시작");
     const userData = await getUserData();
-    console.log("[Server Action] 사용자 정보:", userData);
     console.log("[Server Action] 사용자 권한:", userData.grade);
 
-    // 관리자인 경우 관리자 대시보드로 리다이렉션
-    if (userData.grade === "ADMIN") {
-      console.log(
-        "[Server Action] 관리자 권한 확인, 관리자 대시보드로 이동 경로 설정 '/admin/dashboard'"
-      );
-      return { success: true, redirectTo: "/admin/dashboard" };
-    } else {
-      console.log(
-        "[Server Action] 일반 사용자 권한 확인, 일반 대시보드로 이동 경로 설정 '/dashboard'"
-      );
-      return { success: true, redirectTo: "/dashboard" };
-    }
+    // 리다이렉션 경로 결정
+    const redirectTo =
+      userData.grade === "ADMIN" ? "/admin/dashboard" : "/dashboard";
+
+    // 클라이언트 응답
+    return {
+      success: true,
+      redirectTo,
+    };
   } catch (error) {
-    console.error("[Server Action] 로그인 처리 중 오류 발생:", error);
-    throw error;
+    console.error("Login error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "로그인에 실패했습니다.",
+    };
   }
 }
 
