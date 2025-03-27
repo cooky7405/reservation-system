@@ -6,6 +6,9 @@ import { checkAdminAccess } from "@/app/actions/auth";
 import { getUserReservations } from "@/app/actions/reservation";
 import { Reservation } from "@/app/actions/reservation";
 
+// 이 페이지는 항상 서버에서 동적으로 렌더링됩니다.
+export const dynamic = "force-dynamic";
+
 export default function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

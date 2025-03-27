@@ -13,6 +13,9 @@ import {
 } from "@/app/actions/reservation";
 import { getCategories, Category } from "@/app/actions/reservation";
 
+// 이 페이지는 항상 서버에서 동적으로 렌더링됩니다.
+export const dynamic = "force-dynamic";
+
 export default function ItemsManagementPage() {
   const router = useRouter();
   const [items, setItems] = useState<Item[]>([]);

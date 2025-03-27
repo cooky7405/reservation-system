@@ -2,6 +2,8 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import ReservationClient from "./ReservationClient";
 
+export const dynamic = "force-dynamic";
+
 export default async function ReservationPage() {
   const cookieStore = cookies();
   const token = cookieStore.get("accessToken");

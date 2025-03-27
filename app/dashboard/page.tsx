@@ -4,6 +4,9 @@ import { getUserData } from "@/app/actions/auth";
 import { getUserReservations, Reservation } from "@/app/actions/reservation";
 import DashboardLayout from "@/app/components/layouts/DashboardLayout";
 
+// 이 페이지는 항상 서버에서 동적으로 렌더링됩니다.
+export const dynamic = "force-dynamic";
+
 export default async function DashboardPage() {
   try {
     // 토큰 확인
