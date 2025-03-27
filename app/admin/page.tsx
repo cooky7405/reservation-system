@@ -83,7 +83,6 @@ export default function AdminPage() {
         ...editingItem,
         name: editingItem.name,
         description: editingItem.description,
-        price: editingItem.price,
         category_id: editingItem.category_id,
         is_active: editingItem.is_active,
       });
@@ -232,21 +231,6 @@ export default function AdminPage() {
                     />
                   </div>
                   <div>
-                    <label className="block mb-1">가격</label>
-                    <input
-                      type="number"
-                      value={editingItem.price}
-                      onChange={(e) =>
-                        setEditingItem({
-                          ...editingItem,
-                          price: Number(e.target.value),
-                        })
-                      }
-                      className="w-full p-2 border rounded"
-                      required
-                    />
-                  </div>
-                  <div>
                     <label className="block mb-1">카테고리</label>
                     <select
                       value={editingItem.category_id}
@@ -288,9 +272,7 @@ export default function AdminPage() {
                 <div>
                   <h3 className="font-semibold">{item.name}</h3>
                   <p className="text-gray-600">{item.description}</p>
-                  <p className="text-gray-600">
-                    가격: {item.price.toLocaleString()}원
-                  </p>
+
                   <p className="text-gray-600">
                     카테고리:{" "}
                     {categories.find((c) => c.id === item.category_id)?.name}

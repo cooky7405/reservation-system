@@ -139,7 +139,7 @@ export default function ReservationClient() {
             카테고리
           </label>
           <select
-            value={selectedItem?.categoryId.toString() || ""}
+            value={selectedItem?.category_id.toString() || ""}
             onChange={() => handleCategoryChange()}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
           >
@@ -164,7 +164,7 @@ export default function ReservationClient() {
           >
             <option value="">아이템 선택</option>
             {items
-              .filter((item) => item.categoryId === selectedItem?.categoryId)
+              .filter((item) => item.category_id === selectedItem?.category_id)
               .map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}

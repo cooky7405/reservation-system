@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { login } from "@/app/actions/auth";
 
 export default function LoginForm() {
-  const router = useRouter();
+  // const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -19,10 +19,14 @@ export default function LoginForm() {
 
     try {
       console.log("[LoginForm] 로그인 시도");
-      const result = await login(email, password);
+      const result = (await login(email, password)) as {
+        success: boolean;
+        redirectTo?: string;
+        error?: string;
+      };
       console.log("[LoginForm] 로그인 결과:", result);
 
-      if (result.success) {
+      if (result.success && result.redirectTo) {
         console.log("[LoginForm] 리다이렉션 경로:", result.redirectTo);
         console.log("[LoginForm] 리다이렉션 시작");
         window.location.href = result.redirectTo;
